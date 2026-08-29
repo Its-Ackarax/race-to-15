@@ -1,0 +1,4 @@
+{
+  "_comment": "Your admin panel. Anything in here wins over the fetched numbers. Edit this file in GitHub, commit, and the site picks it up on the next run. Delete an entry to hand the player back to the automatic count.",
+  "overrides": {}
+}

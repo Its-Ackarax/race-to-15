@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Race to 15</title>
+<meta name="description" content="Three Premier League players each. Closest to 15 goals by 31 December wins.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --pitch:#0B241A; --surface:#113124; --surface2:#16402C; --line:#1F5138;
+    --chalk:#EAF2E9; --dim:#8FAA9B; --amber:#F5B32E; --flare:#FF6B4A; --grass:#57C98A;
+    --display:"Barlow Condensed","Oswald","Arial Narrow",system-ui,sans-serif;
+    --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --target:75%;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--pitch);color:var(--chalk);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;padding:18px 16px 48px}
+  .wrap{max-width:940px;margin:0 auto}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:20px}
+  h1{font-family:var(--display);font-weight:700;font-size:clamp(38px,9vw,64px);letter-spacing:.01em;text-transform:uppercase;margin:0;line-height:.92}
+  h1 em{font-style:normal;color:var(--amber)}
+  .rules{color:var(--dim);margin:8px 0 0;max-width:56ch;font-size:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:14px;font-family:var(--display);text-transform:uppercase;letter-spacing:.09em;font-size:13px}
+  .meta span{color:var(--dim)}
+  .meta b{color:var(--chalk);font-weight:600;font-variant-numeric:tabular-nums}
+
+  .filterbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+  select{background:var(--surface);border:1px solid var(--line);color:var(--chalk);padding:9px 12px;border-radius:2px;font-family:var(--body);font-size:14px;min-width:230px}
+  .ghost{font-family:var(--display);text-transform:uppercase;letter-spacing:.09em;font-size:13px;background:none;border:1px solid var(--line);color:var(--dim);padding:9px 14px;border-radius:2px;cursor:pointer}
+  .ghost:hover{color:var(--chalk);border-color:var(--dim)}
+  .ghost[hidden]{display:none}
+  .readout{color:var(--dim);font-size:13px;flex:1;min-width:200px}
+  .readout b{color:var(--chalk);font-weight:600}
+  .readout .hit{color:var(--amber)}
+  select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  .head{display:grid;grid-template-columns:34px 1fr 240px 74px;gap:12px;align-items:end;font-family:var(--display);text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--dim);padding:0 10px 8px}
+  .head .m{position:relative}
+  .head .m .mark{position:absolute;left:var(--target);transform:translateX(-50%);color:var(--amber);font-weight:700;letter-spacing:.06em}
+
+  .row{display:grid;grid-template-columns:34px 1fr 240px 74px;gap:12px;align-items:center;padding:11px 10px;border-top:1px solid var(--line)}
+  .row.me{background:var(--surface);box-shadow:inset 3px 0 0 var(--grass)}
+  .rank{font-family:var(--display);font-size:22px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .row.lead .rank{color:var(--amber)}
+  .who{min-width:0}
+  .name{font-family:var(--display);text-transform:uppercase;letter-spacing:.05em;font-size:20px;font-weight:600;line-height:1.1}
+  .picks{color:var(--dim);font-size:12.5px;margin-top:2px;overflow-wrap:anywhere}
+  .pk{color:var(--chalk);font-weight:500;cursor:pointer;border-bottom:1px dotted transparent}
+  .pk:hover{border-bottom-color:var(--dim)}
+  .pk.on{color:var(--amber)}
+
+  .track{position:relative;height:24px;background:var(--surface);border-radius:2px}
+  .fill{position:absolute;left:0;top:0;bottom:0;background:var(--grass);border-radius:2px 0 0 2px;transition:width .25s ease}
+  .over{position:absolute;top:0;bottom:0;background:var(--flare);opacity:.85}
+  .fifteen{position:absolute;left:var(--target);top:-5px;bottom:-5px;width:0;border-left:1px dashed var(--amber)}
+  .tot{text-align:right}
+  .goals{font-family:var(--display);font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+  .delta{font-size:11.5px;color:var(--dim);letter-spacing:.03em;white-space:nowrap}
+  .delta.hit{color:var(--amber)}
+
+  details{margin-top:26px;border-top:1px solid var(--line);padding-top:16px}
+  summary{font-family:var(--display);text-transform:uppercase;letter-spacing:.09em;font-size:15px;color:var(--dim);cursor:pointer}
+  summary:hover{color:var(--chalk)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:14px}
+  .card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:9px 12px}
+  .card.scored{border-color:#2C6B47}
+  .card .pn{font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;font-size:16px;font-weight:600;line-height:1.1}
+  .card .owners{color:var(--dim);font-size:11.5px;margin-top:1px}
+  .card .g{font-family:var(--display);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+  .card .g.zero{color:var(--dim);opacity:.5}
+
+  footer{color:var(--dim);font-size:12.5px;margin-top:26px;border-top:1px solid var(--line);padding-top:14px;max-width:64ch}
+  .loading{color:var(--dim);padding:24px 10px}
+
+  @media (max-width:720px){
+    .head{display:none}
+    .row{grid-template-columns:30px 1fr 66px;grid-template-areas:"r w t" ". m m";row-gap:9px}
+    .rank{grid-area:r}.who{grid-area:w}.tot{grid-area:t}.track{grid-area:m}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Race to <em>15</em></h1>
+    <p class="rules">Three Premier League players each. Get to 15 league goals by 31 December — then whoever sits closest to 15 takes it. Overshooting doesn't knock you out, it just costs you.</p>
+    <div class="meta">
+      <span>Deadline <b>31 Dec 2026</b></span>
+      <span><b id="daysLeft">—</b> days left</span>
+      <span>Goals updated <b id="stamp">—</b></span>
+    </div>
+  </header>
+
+  <div class="filterbar">
+    <select id="pick" aria-label="Show only teams containing a player">
+      <option value="">Everyone (19 teams)</option>
+    </select>
+    <button class="ghost" id="clearPick" hidden>Show everyone</button>
+    <div class="readout" id="readout"></div>
+  </div>
+
+  <div class="head">
+    <div>#</div><div>Name &amp; picks</div>
+    <div class="m">Goals<span class="mark">15</span></div>
+    <div style="text-align:right">Total</div>
+  </div>
+  <div id="table"><p class="loading">Loading the latest goals…</p></div>
+
+  <details>
+    <summary>Every player's goal count</summary>
+    <div class="grid" id="grid"></div>
+  </details>
+
+  <footer>
+    Goals come straight from the Premier League scorer table and refresh every night — nobody can edit them from this page.
+    League goals only: no cups, no Europe. Counting stops on 31 December.
+  </footer>
+</div>
+
+<script>
+const ENTRIES = [
+  ["Rónán Q",["bruno","saka","lefee"]],
+  ["Padraig",["watkins","mateta","gibbswhite"]],
+  ["Conal",["mbeumo","palmer","odegaard"]],
+  ["Eoghan",["semenyo","gibbswhite","barnes"]],
+  ["Dean Rigney",["bruno","sarr","szoboszlai"]],
+  ["Daragh",["welbeck","bruno","rice"]],
+  ["Martin",["watkins","gibbswhite","semenyo"]],
+  ["Cormac",["thiago","wirtz","rice"]],
+  ["Rothaí Inis Meáin",["haaland","oreilly","szoboszlai"]],
+  ["Fiachra",["bruno","saka","palmer"]],
+  ["Adrian",["haaland","isak","cunha"]],
+  ["Tadgh",["merino","rice","vandijk"]],
+  ["Milo",["haaland","thiago","watkins"]],
+  ["Carmel",["joaopedro","mitchell","donnarumma"]],
+  ["Diarmuid",["haaland","sesko","thiago"]],
+  ["Máirtín",["brobbey","hwilson","gyokeres"]],
+  ["Rónán W",["vandijk","mbeumo","sarr"]],
+  ["Liam",["watkins","vandijk","gabriel"]],
+  ["Cillian",["mbeumo","vandijk","joaopedro"]]
+];
+const ME = "Dean Rigney";   // highlighted row
+
+let NAME = {}, PLAYERS = [], goals = {}, owners = {}, filterId = "";
+const $ = s => document.querySelector(s);
+
+async function boot(){
+  try{
+    // Cache-bust so a phone doesn't sit on last night's copy.
+    const bust = "?v=" + Date.now();
+    const [roster, data] = await Promise.all([
+      fetch("players.json" + bust).then(r => r.json()),
+      fetch("goals.json" + bust).then(r => r.json())
+    ]);
+    PLAYERS = roster.players;
+    NAME = Object.fromEntries(PLAYERS.map(p => [p.id, p.name]));
+    goals = data.goals || {};
+    PLAYERS.forEach(p => owners[p.id] = []);
+    ENTRIES.forEach(([who, picks]) => picks.forEach(id => owners[id]?.push(who)));
+    $("#stamp").textContent = new Date(data.updated).toLocaleDateString(undefined,{day:"numeric",month:"short"})
+      + " " + new Date(data.updated).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+    renderDays(); fillSelect(); renderTable(); renderGrid();
+  }catch(e){
+    $("#table").innerHTML = '<p class="loading">Couldn\u2019t load the goals just now. Pull to refresh in a minute.</p>';
+  }
+}
+
+function renderDays(){
+  const end = new Date("2026-12-31T23:59:59");
+  $("#daysLeft").textContent = Math.max(0, Math.ceil((end - new Date())/864e5));
+}
+
+function totals(){
+  return ENTRIES.map(([who, picks]) => ({
+    who, picks, total: picks.reduce((s,id) => s + (goals[id]||0), 0)
+  }));
+}
+function ordered(){
+  const rows = totals();
+  rows.sort((a,b) => {
+    const aq = a.total >= 15, bq = b.total >= 15;
+    if(aq !== bq) return aq ? -1 : 1;          // anyone past 15 outranks anyone short of it
+    if(aq) return a.total - b.total;            // past 15: closest to 15 leads
+    return b.total - a.total;                   // short of 15: most goals leads
+  });
+  let rank = 0, prev = null;
+  rows.forEach((r,i) => { if(r.total !== prev){ rank = i+1; prev = r.total; } r.rank = rank; });
+  return rows;
+}
+
+function fillSelect(){
+  const opts = PLAYERS.slice().sort((a,b) =>
+    owners[b.id].length - owners[a.id].length || a.name.localeCompare(b.name));
+  $("#pick").insertAdjacentHTML("beforeend", opts.map(p =>
+    `<option value="${p.id}">${p.name} — ${owners[p.id].length} team${owners[p.id].length>1?"s":""}</option>`
+  ).join(""));
+}
+function ordinal(n){ const s=["th","st","nd","rd"], v=n%100; return n + (s[(v-20)%10] || s[v] || s[0]); }
+
+// Top scorer first. When a player is being filtered on, he holds the first slot
+// regardless of goals, so the same name lines up down the column.
+function orderPicks(picks){
+  return picks.slice().sort((a,b) => {
+    if(a === filterId) return -1;
+    if(b === filterId) return 1;
+    return (goals[b]||0) - (goals[a]||0) || NAME[a].localeCompare(NAME[b]);
+  });
+}
+
+function renderReadout(rows){
+  const el = $("#readout");
+  $("#clearPick").hidden = !filterId;
+  if(!filterId){
+    const lead = rows[0];
+    el.innerHTML = `<b>${lead.who}</b> leads on ${lead.total}. Pick a player to see only the teams carrying him.`;
+    return;
+  }
+  const g = goals[filterId] || 0, best = rows[0], spread = rows.map(r => r.total);
+  el.innerHTML = `<b>${NAME[filterId]}</b> — ${g} goal${g===1?"":"s"}, in ${rows.length} team${rows.length>1?"s":""}. `
+    + `Best placed: <b>${best.who}</b>, ${ordinal(best.rank)} overall on <span class="hit">${best.total}</span>. `
+    + (rows.length>1 ? `Totals range ${Math.min(...spread)}–${Math.max(...spread)}.` : "");
+}
+
+function renderTable(){
+  const all = ordered();
+  const scale = Math.max(20, ...all.map(r => r.total + 2));
+  document.documentElement.style.setProperty("--target", (15/scale*100).toFixed(2) + "%");
+
+  // Ranks stay from the full field, so a filtered team's position is its real one.
+  const rows = filterId ? all.filter(r => r.picks.includes(filterId)) : all;
+  renderReadout(rows);
+
+  $("#table").innerHTML = rows.map(r => {
+    const pct = Math.min(100, r.total/scale*100);
+    const capped = Math.min(r.total, 15)/scale*100;
+    const overW = Math.max(0, pct - capped);
+    const delta = r.total >= 15
+      ? `<span class="hit">${r.total === 15 ? "exactly 15" : "+" + (r.total-15) + " over"}</span>`
+      : `${15-r.total} to go`;
+    return `<div class="row${r.who===ME?" me":""}${r.rank===1?" lead":""}">
+      <div class="rank">${r.rank}</div>
+      <div class="who">
+        <div class="name">${r.who}</div>
+        <div class="picks">${orderPicks(r.picks).map(id =>
+          `<span class="pk${id===filterId?" on":""}" data-pick="${id}" role="button" tabindex="0">${NAME[id]}</span> ${goals[id]||0}`
+        ).join(" · ")}</div>
+      </div>
+      <div class="track">
+        <div class="fill" style="width:${capped}%"></div>
+        <div class="over" style="left:${capped}%;width:${overW}%"></div>
+        <div class="fifteen"></div>
+      </div>
+      <div class="tot">
+        <div class="goals">${r.total}</div>
+        <div class="delta ${r.total>=15?"hit":""}">${delta}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderGrid(){
+  $("#grid").innerHTML = PLAYERS.slice()
+    .sort((a,b) => (goals[b.id]||0) - (goals[a.id]||0) || a.name.localeCompare(b.name))
+    .map(p => `<div class="card${goals[p.id]?" scored":""}">
+      <div><div class="pn">${p.name}</div><div class="owners">${owners[p.id].join(", ")}</div></div>
+      <div class="g${goals[p.id]?"":" zero"}">${goals[p.id]||0}</div>
+    </div>`).join("");
+}
+
+function setFilter(id){ filterId = id; $("#pick").value = id; renderTable(); }
+$("#pick").addEventListener("change", e => setFilter(e.target.value));
+$("#clearPick").addEventListener("click", () => setFilter(""));
+$("#table").addEventListener("click", e => {
+  const id = e.target.dataset?.pick;
+  if(id) setFilter(id === filterId ? "" : id);
+});
+$("#table").addEventListener("keydown", e => {
+  const id = e.target.dataset?.pick;
+  if(id && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); setFilter(id === filterId ? "" : id); }
+});
+
+boot();
+</script>
+</html>

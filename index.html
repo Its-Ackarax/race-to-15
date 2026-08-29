@@ -246,7 +246,7 @@ function renderReadout(rows){
   $("#clearPick").hidden = !filterId;
   if(!filterId){
     const lead = rows[0];
-    el.innerHTML = `<b>${lead.who}</b> leads on ${lead.total}. <b> Pick a player to see only the teams carrying him.`;
+    el.innerHTML = `<b>${lead.who}</b> leads on ${lead.total}. <b> Pick a player to only see the teams carrying them.`;
     return;
   }
   const g = goals[filterId] || 0, best = rows[0], spread = rows.map(r => r.total);
